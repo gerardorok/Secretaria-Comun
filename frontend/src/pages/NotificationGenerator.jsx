@@ -281,9 +281,10 @@ export default function NotificationGenerator() {
                       label="Nombre del destinatario"
                       value={data.NOMBRE}
                       onChange={update("NOMBRE")}
-                      placeholder="Ej: RODRIGO ALBERTO ANDRADE ORTIZ"
+                      placeholder="Ej: CRISTIANO RONALDO DOS SANTOS"
                       error={errors.NOMBRE}
                       testId="input-nombre"
+                      helper="Se reutiliza automáticamente como “Procede a notificar a” en la Página 2"
                     />
                   </div>
                   <TextField
@@ -291,7 +292,7 @@ export default function NotificationGenerator() {
                     label="Dirección"
                     value={data.DIRECCION}
                     onChange={update("DIRECCION")}
-                    placeholder="Ej: Diagonal 4 a 2 a – 22, Barrio Loma Fresca"
+                    placeholder="Ej: Calle 78 No. 14 – 15"
                     error={errors.DIRECCION}
                     testId="input-direccion"
                   />
@@ -300,7 +301,7 @@ export default function NotificationGenerator() {
                     label="Ciudad"
                     value={data.CIUDAD}
                     onChange={update("CIUDAD")}
-                    placeholder="Ej: Ariguaní, Magdalena"
+                    placeholder="Ej: Santa Marta, Magdalena"
                     error={errors.CIUDAD}
                     testId="input-ciudad"
                   />
@@ -309,7 +310,7 @@ export default function NotificationGenerator() {
                     label="Número de Aviso"
                     value={data.NUMERO_AVISO}
                     onChange={update("NUMERO_AVISO")}
-                    placeholder="Ej: 029-2026"
+                    placeholder="Ej: 085-2026"
                     error={errors.NUMERO_AVISO}
                     testId="input-numero-aviso"
                     helper="Se reutiliza automáticamente en la Página 2"
@@ -319,9 +320,10 @@ export default function NotificationGenerator() {
                     label="Auto"
                     value={data.AUTO}
                     onChange={update("AUTO")}
-                    placeholder="Ej: AUTO No. 503"
+                    placeholder="Ej: AUTO No. 456"
                     error={errors.AUTO}
                     testId="input-auto"
+                    helper="Se reutiliza como “Providencia No.” en la Página 2"
                   />
                   <DateField
                     id="FECHA_AUTO"
@@ -336,7 +338,7 @@ export default function NotificationGenerator() {
                     label="Número del PRF"
                     value={data.PRF}
                     onChange={update("PRF")}
-                    placeholder="Ej: 80472-2025-48809"
+                    placeholder="Ej: 80472-2025-48999"
                     error={errors.PRF}
                     testId="input-prf"
                     helper="Se reutiliza automáticamente en la Página 2"
@@ -346,7 +348,7 @@ export default function NotificationGenerator() {
                     label="Entidad Afectada"
                     value={data.ENTIDAD_AFECTADA}
                     onChange={update("ENTIDAD_AFECTADA")}
-                    placeholder="Ej: MUNICIPIO DE SANTA ANA"
+                    placeholder="Ej: MUNICIPIO DE TENERIFE"
                     error={errors.ENTIDAD_AFECTADA}
                     testId="input-entidad-afectada"
                     helper="Se reutiliza automáticamente en la Página 2"
@@ -494,7 +496,7 @@ export default function NotificationGenerator() {
                       label="Personas a Notificar"
                       value={data.PERSONAS_NOTIFICAR}
                       onChange={update("PERSONAS_NOTIFICAR")}
-                      placeholder="Lista de personas separadas por comas"
+                      placeholder="Ej: CRISTIANO RONALDO DOS SANTOS, LIONEL ANDRES MESSI"
                       error={errors.PERSONAS_NOTIFICAR}
                       testId="input-personas-notificar"
                       multiline
@@ -507,7 +509,7 @@ export default function NotificationGenerator() {
                       label="Anexo Providencia En"
                       value={data.ANEXO}
                       onChange={update("ANEXO")}
-                      placeholder="Ej: AUTO No. 503 en 19 folios"
+                      placeholder="Ej: AUTO 456 en 17 folios"
                       error={errors.ANEXO}
                       testId="input-anexo"
                     />
