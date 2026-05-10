@@ -44,8 +44,8 @@ const initialState = {
   PRF: "",
   ENTIDAD_AFECTADA: "",
   PROFERIDO_POR: "",
-  // Página 2 (PROVIDENCIA y FECHA_PROVIDENCIA se reutilizan desde AUTO/FECHA_AUTO)
-  NOTIFICADO: "",
+  // Página 2 (NOTIFICADO, PROVIDENCIA y FECHA_PROVIDENCIA se reutilizan
+  // automáticamente desde NOMBRE/AUTO/FECHA_AUTO de la página 1)
   FECHA_ELABORACION: null,
   PERSONAS_NOTIFICAR: "",
   TIPO_PROVIDENCIA: "",
@@ -66,7 +66,6 @@ const PAGE_1_REQUIRED = [
 ];
 
 const PAGE_2_REQUIRED = [
-  "NOTIFICADO",
   "FECHA_ELABORACION",
   "PERSONAS_NOTIFICAR",
   "TIPO_PROVIDENCIA",
@@ -133,7 +132,7 @@ export default function NotificationGenerator() {
       ENTIDAD_AFECTADA: data.ENTIDAD_AFECTADA.trim(),
       PROFERIDO_POR: data.PROFERIDO_POR.trim(),
 
-      NOTIFICADO: data.NOTIFICADO.trim(),
+      // NOTIFICADO se reutiliza desde NOMBRE en el backend
       FECHA_ELABORACION: data.FECHA_ELABORACION
         ? format(data.FECHA_ELABORACION, "d 'de' MMMM 'de' yyyy", { locale: es })
         : "",
@@ -399,7 +398,7 @@ export default function NotificationGenerator() {
                       color: "#7a5b16",
                     }}
                   >
-                    6 campos
+                    5 campos
                   </span>
                 </div>
                 <Separator />
@@ -413,6 +412,12 @@ export default function NotificationGenerator() {
                     Campos reutilizados de la Página 1
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="sm:col-span-2">
+                      <span className="text-slate-500">Procede a notificar a:</span>{" "}
+                      <span className="font-medium text-slate-800">
+                        {data.NOMBRE || "—"}
+                      </span>
+                    </div>
                     <div>
                       <span className="text-slate-500">Número de Aviso:</span>{" "}
                       <span className="font-medium text-slate-800">
@@ -457,17 +462,6 @@ export default function NotificationGenerator() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <TextField
-                      id="NOTIFICADO"
-                      label="Procede a Notificar a"
-                      value={data.NOTIFICADO}
-                      onChange={update("NOTIFICADO")}
-                      placeholder="Persona a quien se notifica en la página 2"
-                      error={errors.NOTIFICADO}
-                      testId="input-notificado"
-                    />
-                  </div>
                   <DateField
                     id="FECHA_ELABORACION"
                     label="Fecha de Elaboración del Documento"

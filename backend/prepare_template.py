@@ -99,6 +99,8 @@ PARAGRAPH_REPLACEMENTS_GLOBAL = [
 PARAGRAPH_REPLACEMENTS_BY_INDEX = {
     # Párrafo 4: "Santa Marta D.T.C.H., " -> añadir fecha de elaboración
     4: [("Santa Marta D.T.C.H., ", "Santa Marta D.T.C.H., {{FECHA_ELABORACION}}")],
+    # Párrafo 8: encabezado de tratamiento (institucional inclusivo)
+    8: [("Señor", "Señor(a)")],
     # Párrafo 9: nombre del destinatario (página 1)
     9: [("RODRIGO ALBERTO ANDRADE ORTIZ", "{{NOMBRE}}")],
     # Párrafo 43: persona notificada (página 2)
