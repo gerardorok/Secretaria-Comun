@@ -44,11 +44,10 @@ const initialState = {
   PRF: "",
   ENTIDAD_AFECTADA: "",
   PROFERIDO_POR: "",
-  // Página 2 (PROVIDENCIA se reutiliza automáticamente desde AUTO)
+  // Página 2 (PROVIDENCIA y FECHA_PROVIDENCIA se reutilizan desde AUTO/FECHA_AUTO)
   NOTIFICADO: "",
   FECHA_ELABORACION: null,
   PERSONAS_NOTIFICAR: "",
-  FECHA_PROVIDENCIA: null,
   TIPO_PROVIDENCIA: "",
   FECHA_CITACION: null,
   ANEXO: "",
@@ -70,7 +69,6 @@ const PAGE_2_REQUIRED = [
   "NOTIFICADO",
   "FECHA_ELABORACION",
   "PERSONAS_NOTIFICAR",
-  "FECHA_PROVIDENCIA",
   "TIPO_PROVIDENCIA",
   "FECHA_CITACION",
   "ANEXO",
@@ -141,9 +139,7 @@ export default function NotificationGenerator() {
         : "",
       PERSONAS_NOTIFICAR: data.PERSONAS_NOTIFICAR.trim(),
       // PROVIDENCIA se reutiliza desde AUTO en el backend
-      FECHA_PROVIDENCIA: data.FECHA_PROVIDENCIA
-        ? format(data.FECHA_PROVIDENCIA, "d 'de' MMMM 'de' yyyy", { locale: es })
-        : "",
+      // FECHA_PROVIDENCIA se reutiliza desde FECHA_AUTO en el backend
       TIPO_PROVIDENCIA: data.TIPO_PROVIDENCIA.trim(),
       FECHA_CITACION: data.FECHA_CITACION
         ? format(data.FECHA_CITACION, "dd/MM/yyyy", { locale: es })
@@ -403,7 +399,7 @@ export default function NotificationGenerator() {
                       color: "#7a5b16",
                     }}
                   >
-                    7 campos
+                    6 campos
                   </span>
                 </div>
                 <Separator />
@@ -427,6 +423,16 @@ export default function NotificationGenerator() {
                       <span className="text-slate-500">Providencia No.:</span>{" "}
                       <span className="font-medium text-slate-800">
                         {data.AUTO || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Fecha Providencias:</span>{" "}
+                      <span className="font-medium text-slate-800">
+                        {data.FECHA_AUTO
+                          ? format(data.FECHA_AUTO, "d 'de' MMMM 'de' yyyy", {
+                              locale: es,
+                            })
+                          : "—"}
                       </span>
                     </div>
                     <div>
@@ -469,14 +475,6 @@ export default function NotificationGenerator() {
                     onChange={update("FECHA_ELABORACION")}
                     error={errors.FECHA_ELABORACION}
                     testId="input-fecha-elaboracion"
-                  />
-                  <DateField
-                    id="FECHA_PROVIDENCIA"
-                    label="Fecha Providencias"
-                    value={data.FECHA_PROVIDENCIA}
-                    onChange={update("FECHA_PROVIDENCIA")}
-                    error={errors.FECHA_PROVIDENCIA}
-                    testId="input-fecha-providencia"
                   />
                   <TextField
                     id="TIPO_PROVIDENCIA"

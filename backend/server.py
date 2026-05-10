@@ -65,8 +65,7 @@ class NotificationData(BaseModel):
     NOTIFICADO: str = Field(..., min_length=1)
     FECHA_ELABORACION: str = Field(..., min_length=1)
     PERSONAS_NOTIFICAR: str = Field(..., min_length=1)
-    # PROVIDENCIA se reutiliza desde AUTO (página 1)
-    FECHA_PROVIDENCIA: str = Field(..., min_length=1)
+    # PROVIDENCIA y FECHA_PROVIDENCIA se reutilizan desde AUTO/FECHA_AUTO (página 1)
     TIPO_PROVIDENCIA: str = Field(..., min_length=1)
     FECHA_CITACION: str = Field(..., min_length=1)
     ANEXO: str = Field(..., min_length=1)
@@ -117,9 +116,11 @@ async def generate_notification(data: NotificationData):
         # tal como aparecen en la plantilla ({{ NOMBRE }}, {{ DIRECCION }}, ...)
         context = data.model_dump()
         # Reutilización automática de campos compartidos página 1 -> página 2.
-        # En la plantilla la página 2 usa {{ ENTIDAD }} y {{ PROVIDENCIA }}.
+        # En la plantilla la página 2 usa {{ ENTIDAD }}, {{ PROVIDENCIA }} y
+        # {{ FECHA_PROVIDENCIA }}.
         context["ENTIDAD"] = context["ENTIDAD_AFECTADA"]
         context["PROVIDENCIA"] = context["AUTO"]
+        context["FECHA_PROVIDENCIA"] = context["FECHA_AUTO"]
         tpl.render(context)
 
         buffer = io.BytesIO()
