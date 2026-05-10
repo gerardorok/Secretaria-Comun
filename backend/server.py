@@ -65,7 +65,7 @@ class NotificationData(BaseModel):
     NOTIFICADO: str = Field(..., min_length=1)
     FECHA_ELABORACION: str = Field(..., min_length=1)
     PERSONAS_NOTIFICAR: str = Field(..., min_length=1)
-    PROVIDENCIA: str = Field(..., min_length=1)
+    # PROVIDENCIA se reutiliza desde AUTO (página 1)
     FECHA_PROVIDENCIA: str = Field(..., min_length=1)
     TIPO_PROVIDENCIA: str = Field(..., min_length=1)
     FECHA_CITACION: str = Field(..., min_length=1)
@@ -116,9 +116,10 @@ async def generate_notification(data: NotificationData):
         # docxtpl espera un dict; usamos los nombres exactos de las variables
         # tal como aparecen en la plantilla ({{ NOMBRE }}, {{ DIRECCION }}, ...)
         context = data.model_dump()
-        # En la plantilla la página 2 usa {{ ENTIDAD }} para reutilizar el
-        # valor de la entidad afectada de la página 1.
+        # Reutilización automática de campos compartidos página 1 -> página 2.
+        # En la plantilla la página 2 usa {{ ENTIDAD }} y {{ PROVIDENCIA }}.
         context["ENTIDAD"] = context["ENTIDAD_AFECTADA"]
+        context["PROVIDENCIA"] = context["AUTO"]
         tpl.render(context)
 
         buffer = io.BytesIO()

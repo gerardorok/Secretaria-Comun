@@ -44,11 +44,10 @@ const initialState = {
   PRF: "",
   ENTIDAD_AFECTADA: "",
   PROFERIDO_POR: "",
-  // Página 2
+  // Página 2 (PROVIDENCIA se reutiliza automáticamente desde AUTO)
   NOTIFICADO: "",
   FECHA_ELABORACION: null,
   PERSONAS_NOTIFICAR: "",
-  PROVIDENCIA: "",
   FECHA_PROVIDENCIA: null,
   TIPO_PROVIDENCIA: "",
   FECHA_CITACION: null,
@@ -71,7 +70,6 @@ const PAGE_2_REQUIRED = [
   "NOTIFICADO",
   "FECHA_ELABORACION",
   "PERSONAS_NOTIFICAR",
-  "PROVIDENCIA",
   "FECHA_PROVIDENCIA",
   "TIPO_PROVIDENCIA",
   "FECHA_CITACION",
@@ -142,7 +140,7 @@ export default function NotificationGenerator() {
         ? format(data.FECHA_ELABORACION, "d 'de' MMMM 'de' yyyy", { locale: es })
         : "",
       PERSONAS_NOTIFICAR: data.PERSONAS_NOTIFICAR.trim(),
-      PROVIDENCIA: data.PROVIDENCIA.trim(),
+      // PROVIDENCIA se reutiliza desde AUTO en el backend
       FECHA_PROVIDENCIA: data.FECHA_PROVIDENCIA
         ? format(data.FECHA_PROVIDENCIA, "d 'de' MMMM 'de' yyyy", { locale: es })
         : "",
@@ -405,7 +403,7 @@ export default function NotificationGenerator() {
                       color: "#7a5b16",
                     }}
                   >
-                    8 campos
+                    7 campos
                   </span>
                 </div>
                 <Separator />
@@ -426,6 +424,12 @@ export default function NotificationGenerator() {
                       </span>
                     </div>
                     <div>
+                      <span className="text-slate-500">Providencia No.:</span>{" "}
+                      <span className="font-medium text-slate-800">
+                        {data.AUTO || "—"}
+                      </span>
+                    </div>
+                    <div>
                       <span className="text-slate-500">PRF:</span>{" "}
                       <span className="font-medium text-slate-800">
                         {data.PRF || "—"}
@@ -437,7 +441,7 @@ export default function NotificationGenerator() {
                         {data.ENTIDAD_AFECTADA || "—"}
                       </span>
                     </div>
-                    <div>
+                    <div className="sm:col-span-2">
                       <span className="text-slate-500">Proferido por:</span>{" "}
                       <span className="font-medium text-slate-800 break-words">
                         {data.PROFERIDO_POR || "—"}
@@ -465,15 +469,6 @@ export default function NotificationGenerator() {
                     onChange={update("FECHA_ELABORACION")}
                     error={errors.FECHA_ELABORACION}
                     testId="input-fecha-elaboracion"
-                  />
-                  <TextField
-                    id="PROVIDENCIA"
-                    label="Providencia No."
-                    value={data.PROVIDENCIA}
-                    onChange={update("PROVIDENCIA")}
-                    placeholder="Ej: AUTO No. 503"
-                    error={errors.PROVIDENCIA}
-                    testId="input-providencia"
                   />
                   <DateField
                     id="FECHA_PROVIDENCIA"
