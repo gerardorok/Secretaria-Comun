@@ -157,12 +157,17 @@ async def generate_notification(data: NotificationData):
 
 app.include_router(api_router)
 
+# CORS: la aplicación no usa cookies ni autenticación, así que mantenemos
+# `allow_credentials=False` para poder devolver `Access-Control-Allow-Origin: *`
+# (la combinación `*` + credentials es rechazada por el navegador según la
+# especificación CORS).
 app.add_middleware(
     CORSMiddleware,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 
