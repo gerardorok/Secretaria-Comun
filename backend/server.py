@@ -41,6 +41,19 @@ db = client[os.environ["DB_NAME"]]
 
 TEMPLATES_DIR = ROOT_DIR / "templates"
 TEMPLATE_FILE = TEMPLATES_DIR / "plantilla_aviso.docx"
+TEMPLATE_ELECTRONICA_NATURAL = TEMPLATES_DIR / "plantilla_electronica_natural.docx"
+TEMPLATE_ELECTRONICA_JURIDICA = TEMPLATES_DIR / "plantilla_electronica_juridica.docx"
+
+MESES_ES = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+]
+
+
+def fecha_es_hoy() -> str:
+    """Devuelve la fecha actual en formato 'd de mes de YYYY' (español)."""
+    now = datetime.now(timezone.utc)
+    return f"{now.day} de {MESES_ES[now.month - 1]} de {now.year}"
 
 app = FastAPI(title="Generador de Notificaciones por Aviso - CGR")
 api_router = APIRouter(prefix="/api")
@@ -154,6 +167,85 @@ async def generate_notification(data: NotificationData):
         raise
     except Exception as ex:  # noqa: BLE001
         logger.exception("Error generando notificación: %s", ex)
+        raise HTTPException(status_code=500, detail=f"Error generando documento: {ex}")
+
+
+# ============================ NOTIFICACIÓN ELECTRÓNICA =====================
+class ElectronicaData(BaseModel):
+    """Datos del formulario para generar la notificación electrónica."""
+
+    persona_juridica: bool = False
+
+    NOMBRE: str = Field(..., min_length=1)
+    CORREO: str = Field(..., min_length=1)
+    TIPO_PROVIDENCIA: str = Field(..., min_length=1)
+    NUMERO_PROVIDENCIA: str = Field(..., min_length=1)
+    FECHA_PROVIDENCIA: str = Field(..., min_length=1)
+    NOMBRE_PROVIDENCIA: str = Field(..., min_length=1)
+    PRF: str = Field(..., min_length=1)
+    ENTIDAD_AFECTADA: str = Field(..., min_length=1)
+    PROFERIDO_POR: str = Field(..., min_length=1)
+    NUMERO_FOLIOS: str = Field(..., min_length=1)
+
+
+@api_router.post("/electronica/generate")
+async def generate_electronica(data: ElectronicaData):
+    """Genera el documento de Notificación Electrónica.
+
+    Selecciona automáticamente la plantilla institucional según el flag
+    `persona_juridica` (False = natural, True = jurídica)."""
+
+    tpl_path = (
+        TEMPLATE_ELECTRONICA_JURIDICA
+        if data.persona_juridica
+        else TEMPLATE_ELECTRONICA_NATURAL
+    )
+    if not tpl_path.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"La plantilla institucional no está disponible ({tpl_path.name}). "
+                "Ejecute prepare_electronica.py para generarla."
+            ),
+        )
+
+    try:
+        tpl = DocxTemplate(str(tpl_path))
+        context = data.model_dump()
+        # La fecha de elaboración se asigna automáticamente con la fecha actual
+        context["FECHA_ELABORACION"] = fecha_es_hoy()
+        tpl.render(context)
+
+        buffer = io.BytesIO()
+        tpl.save(buffer)
+        buffer.seek(0)
+
+        # Auditoría
+        try:
+            await db.electronica_notifications.insert_one(
+                {
+                    **context,
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+        except Exception as ex:  # noqa: BLE001
+            logger.warning("No se pudo registrar en MongoDB: %s", ex)
+
+        kind = "JURIDICA" if data.persona_juridica else "NATURAL"
+        filename = f"NOTIFICACION_ELECTRONICA_{kind}_{slugify_filename(data.PRF)}_{slugify_filename(data.NOMBRE)}.docx"
+
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as ex:  # noqa: BLE001
+        logger.exception("Error generando notificación electrónica: %s", ex)
         raise HTTPException(status_code=500, detail=f"Error generando documento: {ex}")
 
 
