@@ -17,6 +17,8 @@ import Stepper from "@/components/Stepper";
 import TextField from "@/components/TextField";
 import DateField from "@/components/DateField";
 import PreviewPanel from "@/components/PreviewPanel";
+import ProferidoPorField from "@/components/ProferidoPorField";
+import { DEFAULT_PROFERIDO_POR } from "@/modules/defaults";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,7 +45,7 @@ const initialState = {
   FECHA_AUTO: null,
   PRF: "",
   ENTIDAD_AFECTADA: "",
-  PROFERIDO_POR: "",
+  PROFERIDO_POR: DEFAULT_PROFERIDO_POR,
   // Página 2 (NOTIFICADO, PROVIDENCIA y FECHA_PROVIDENCIA se reutilizan
   // automáticamente desde NOMBRE/AUTO/FECHA_AUTO de la página 1)
   FECHA_ELABORACION: null,
@@ -79,6 +81,7 @@ export default function NotificationGenerator() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [proferidoUseDefault, setProferidoUseDefault] = useState(true);
 
   const update = (key) => (value) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -354,17 +357,14 @@ export default function NotificationGenerator() {
                     helper="Se reutiliza automáticamente en la Página 2"
                   />
                   <div className="md:col-span-2">
-                    <TextField
+                    <ProferidoPorField
                       id="PROFERIDO_POR"
-                      label="Acto Administrativo Proferido Por"
                       value={data.PROFERIDO_POR}
                       onChange={update("PROFERIDO_POR")}
-                      placeholder="Ej: GERENCIA DEPARTAMENTAL COLEGIADA DE MAGDALENA DE LA CONTRALORIA GENERAL DE LA REPUBLICA"
                       error={errors.PROFERIDO_POR}
-                      testId="input-proferido-por"
+                      useDefault={proferidoUseDefault}
+                      onUseDefaultChange={setProferidoUseDefault}
                       helper="Se reutiliza automáticamente en la Página 2"
-                      multiline
-                      rows={2}
                     />
                   </div>
                 </div>

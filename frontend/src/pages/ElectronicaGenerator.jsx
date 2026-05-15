@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import TextField from "@/components/TextField";
 import DateField from "@/components/DateField";
+import ProferidoPorField from "@/components/ProferidoPorField";
+import { DEFAULT_PROFERIDO_POR } from "@/modules/defaults";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,7 +44,7 @@ const initialState = {
   NOMBRE_PROVIDENCIA: "",
   PRF: "",
   ENTIDAD_AFECTADA: "",
-  PROFERIDO_POR: "",
+  PROFERIDO_POR: DEFAULT_PROFERIDO_POR,
   NUMERO_FOLIOS: "",
 };
 
@@ -66,6 +68,7 @@ export default function ElectronicaGenerator() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [proferidoUseDefault, setProferidoUseDefault] = useState(true);
 
   const update = (key) => (value) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -370,16 +373,14 @@ export default function ElectronicaGenerator() {
                 helper="Texto que aparecerá en el documento (ej: ‘veintidós (22)’)."
               />
               <div className="md:col-span-2">
-                <TextField
+                <ProferidoPorField
                   id="PROFERIDO_POR"
                   label="Proferido por"
                   value={data.PROFERIDO_POR}
                   onChange={update("PROFERIDO_POR")}
-                  placeholder="Ej: Gerencia Departamental de Magdalena de la Contraloría General de la República"
                   error={errors.PROFERIDO_POR}
-                  testId="input-proferido-por"
-                  multiline
-                  rows={2}
+                  useDefault={proferidoUseDefault}
+                  onUseDefaultChange={setProferidoUseDefault}
                 />
               </div>
             </div>
