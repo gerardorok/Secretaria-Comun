@@ -43,6 +43,8 @@ TEMPLATES_DIR = ROOT_DIR / "templates"
 TEMPLATE_FILE = TEMPLATES_DIR / "plantilla_aviso.docx"
 TEMPLATE_ELECTRONICA_NATURAL = TEMPLATES_DIR / "plantilla_electronica_natural.docx"
 TEMPLATE_ELECTRONICA_JURIDICA = TEMPLATES_DIR / "plantilla_electronica_juridica.docx"
+TEMPLATE_CITACION_BASE = TEMPLATES_DIR / "plantilla_citacion_base.docx"
+TEMPLATE_CITACION_VINCULACION = TEMPLATES_DIR / "plantilla_citacion_vinculacion.docx"
 
 MESES_ES = [
     "enero", "febrero", "marzo", "abril", "mayo", "junio",
@@ -247,6 +249,115 @@ async def generate_electronica(data: ElectronicaData):
     except Exception as ex:  # noqa: BLE001
         logger.exception("Error generando notificación electrónica: %s", ex)
         raise HTTPException(status_code=500, detail=f"Error generando documento: {ex}")
+
+
+# ============================== CITACIÓN A NOTIFICACIÓN PERSONAL ============
+class CitacionData(BaseModel):
+    """Datos del formulario para generar la Citación a Notificación Personal.
+
+    Cuando `vinculacion=True` se utiliza la plantilla con una segunda
+    providencia. El campo CORREO es OPCIONAL: si viene vacío, la línea
+    del correo desaparece del documento generado sin dejar líneas en
+    blanco (gracias a la directiva paragraph-level de docxtpl).
+    """
+
+    vinculacion: bool = False
+
+    NOMBRE: str = Field(..., min_length=1)
+    DIRECCION: str = Field(..., min_length=1)
+    CIUDAD: str = Field(..., min_length=1)
+    CORREO: str = ""  # opcional
+    TIPO_PROVIDENCIA: str = Field(..., min_length=1)
+    NUMERO_PROVIDENCIA: str = Field(..., min_length=1)
+    FECHA_PROVIDENCIA: str = Field(..., min_length=1)
+    NOMBRE_PROVIDENCIA: str = Field(..., min_length=1)
+    PRF: str = Field(..., min_length=1)
+    ENTIDAD_AFECTADA: str = Field(..., min_length=1)
+    PROFERIDO_POR: str = Field(..., min_length=1)
+
+    # Campos exclusivos de vinculación (opcionales si no se usa vinculación)
+    TIPO_PROVIDENCIA_2: str = ""
+    NUMERO_PROVIDENCIA_2: str = ""
+    FECHA_PROVIDENCIA_2: str = ""
+    NOMBRE_PROVIDENCIA_2: str = ""
+
+
+@api_router.post("/citacion/generate")
+async def generate_citacion(data: CitacionData):
+    """Genera el documento de Citación a Notificación Personal.
+
+    Selecciona automáticamente la plantilla institucional según el flag
+    `vinculacion` (False = base, True = vinculación con segunda providencia).
+    """
+
+    if data.vinculacion:
+        # Validamos los campos de la segunda providencia
+        missing = [
+            name for name in ("TIPO_PROVIDENCIA_2", "NUMERO_PROVIDENCIA_2",
+                              "FECHA_PROVIDENCIA_2", "NOMBRE_PROVIDENCIA_2")
+            if not getattr(data, name, "").strip()
+        ]
+        if missing:
+            raise HTTPException(
+                status_code=422,
+                detail=(
+                    "Faltan campos de la segunda providencia: "
+                    + ", ".join(missing)
+                ),
+            )
+        tpl_path = TEMPLATE_CITACION_VINCULACION
+    else:
+        tpl_path = TEMPLATE_CITACION_BASE
+
+    if not tpl_path.exists():
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                f"La plantilla institucional no está disponible ({tpl_path.name}). "
+                "Ejecute prepare_citacion.py para generarla."
+            ),
+        )
+
+    try:
+        tpl = DocxTemplate(str(tpl_path))
+        context = data.model_dump()
+        context["FECHA_ELABORACION"] = fecha_es_hoy()
+        # Si no es vinculación, las variables _2 quedan vacías pero como la
+        # plantilla base no las contiene, no afectan el render.
+        tpl.render(context)
+
+        buffer = io.BytesIO()
+        tpl.save(buffer)
+        buffer.seek(0)
+
+        try:
+            await db.citaciones.insert_one(
+                {
+                    **context,
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+        except Exception as ex:  # noqa: BLE001
+            logger.warning("No se pudo registrar en MongoDB: %s", ex)
+
+        kind = "VINCULACION" if data.vinculacion else "BASE"
+        filename = (
+            f"CITACION_{kind}_{slugify_filename(data.PRF)}_{slugify_filename(data.NOMBRE)}.docx"
+        )
+
+        return StreamingResponse(
+            buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            },
+        )
+    except HTTPException:
+        raise
+    except Exception as ex:  # noqa: BLE001
+        logger.exception("Error generando citación: %s", ex)
+        raise HTTPException(status_code=500, detail=f"Error generando citación: {ex}")
 
 
 app.include_router(api_router)

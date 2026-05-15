@@ -43,15 +43,15 @@ export const MODULES = [
   // Slots preparados para futuros módulos
   {
     id: "citacion",
-    title: "Citación",
+    title: "Citación a Notificación Personal",
     description:
-      "Cita al destinatario para realizar la notificación personal de una providencia en las instalaciones de la entidad.",
+      "Cita al destinatario para realizar la notificación personal de una providencia. Soporta vinculación con una segunda providencia y manejo de correo opcional.",
     route: "/citacion",
     icon: Send,
     accent: "#F0BA41",
     accentSoft: "rgba(240,186,65,0.18)",
-    badge: "Próximamente",
-    enabled: false,
+    badge: "Nuevo",
+    enabled: true,
     testId: "module-card-citacion",
   },
   {

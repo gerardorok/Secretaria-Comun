@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import HomeSelector from "@/pages/HomeSelector";
 import NotificationGenerator from "@/pages/NotificationGenerator";
 import ElectronicaGenerator from "@/pages/ElectronicaGenerator";
+import CitacionGenerator from "@/pages/CitacionGenerator";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
           <Route path="/" element={<HomeSelector />} />
           <Route path="/aviso" element={<NotificationGenerator />} />
           <Route path="/electronica" element={<ElectronicaGenerator />} />
+          <Route path="/citacion" element={<CitacionGenerator />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
