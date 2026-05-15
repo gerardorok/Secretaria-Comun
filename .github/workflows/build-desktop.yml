@@ -1,0 +1,86 @@
+name: Build Desktop App (Windows)
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pyinstaller==6.10.0
+
+      - name: Build frontend (React)
+        shell: bash
+        working-directory: frontend
+        env:
+          # En modo desktop el backend y el frontend viven en el mismo
+          # origen (servido por FastAPI), así que el URL debe ser relativo.
+          REACT_APP_BACKEND_URL: ""
+          # Evita que un warning de eslint reviente el build
+          CI: ""
+        run: |
+          yarn install --frozen-lockfile
+          yarn build
+
+      - name: Build backend with PyInstaller
+        shell: bash
+        run: |
+          pyinstaller --noconfirm --clean --distpath dist-backend desktop/backend.spec
+
+      - name: Install Electron dependencies
+        shell: bash
+        working-directory: desktop
+        run: npm install
+
+      - name: Build Windows installer (Electron)
+        shell: bash
+        working-directory: desktop
+        env:
+          # Evita que electron-builder intente firmar el .exe sin certificado
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm run dist
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SecretariaComun-Windows-Installer
+          path: desktop/dist/*.exe
+          retention-days: 90
+
+      - name: Create release on tag/manual run
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: desktop-${{ github.run_number }}
+          name: "Secretaría Común - Build #${{ github.run_number }}"
+          body: |
+            Instalador de escritorio para Windows generado automáticamente.
+
+            Descarga el archivo `.exe`, ejecútalo y sigue el asistente de
+            instalación. No requiere conexión a internet para funcionar.
+          files: desktop/dist/*.exe
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

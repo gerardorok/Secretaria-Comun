@@ -80,3 +80,8 @@ memory/test_credentials.md
 
 # Mobile development
 android-sdk/
+# Desktop build artifacts
+dist-backend/
+desktop/dist/
+desktop/node_modules/
+desktop/node_modules/electron/dist/electron

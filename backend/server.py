@@ -13,6 +13,7 @@ import io
 import logging
 import os
 import re
+import sys
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,12 +22,22 @@ from docxtpl import DocxTemplate
 from dotenv import load_dotenv
 from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.cors import CORSMiddleware
 
+# Detectar si estamos corriendo como ejecutable empaquetado (PyInstaller).
+# En ese caso `sys._MEIPASS` apunta al directorio temporal con los recursos.
+IS_FROZEN = getattr(sys, "frozen", False)
+if IS_FROZEN:
+    BASE_DIR = Path(sys._MEIPASS)
+else:
+    BASE_DIR = Path(__file__).parent
+
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / ".env")
+env_path = ROOT_DIR / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,12 +45,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# MongoDB connection (mantenido por compatibilidad con la plantilla del entorno)
-mongo_url = os.environ["MONGO_URL"]
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ["DB_NAME"]]
+# MongoDB connection (opcional). En modo desktop/offline puede no estar
+# disponible: se usa solo para auditoría y los endpoints capturan la
+# excepción al insertar, así que nunca bloquea la generación de documentos.
+mongo_url = os.environ.get("MONGO_URL", "")
+db_name = os.environ.get("DB_NAME", "secretaria_comun")
+client = None
+db = None
+if mongo_url:
+    try:
+        from motor.motor_asyncio import AsyncIOMotorClient
 
-TEMPLATES_DIR = ROOT_DIR / "templates"
+        client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=1000)
+        db = client[db_name]
+    except Exception as ex:  # noqa: BLE001
+        logger.warning("MongoDB no disponible (modo offline): %s", ex)
+        client = None
+        db = None
+
+TEMPLATES_DIR = BASE_DIR / "templates"
 TEMPLATE_FILE = TEMPLATES_DIR / "plantilla_aviso.docx"
 TEMPLATE_ELECTRONICA_NATURAL = TEMPLATES_DIR / "plantilla_electronica_natural.docx"
 TEMPLATE_ELECTRONICA_JURIDICA = TEMPLATES_DIR / "plantilla_electronica_juridica.docx"
@@ -376,6 +400,32 @@ app.add_middleware(
 )
 
 
+# En modo desktop (PyInstaller) el backend también sirve los archivos
+# estáticos del frontend React (compilado a /static/). En modo web normal,
+# Kubernetes/Nginx se encarga del frontend y este bloque no aplica.
+STATIC_DIR = BASE_DIR / "static"
+if STATIC_DIR.exists():
+    app.mount(
+        "/",
+        StaticFiles(directory=str(STATIC_DIR), html=True),
+        name="static",
+    )
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    client.close()
+    if client is not None:
+        client.close()
+
+
+if __name__ == "__main__":
+    # Permite arrancar el backend como ejecutable independiente
+    # (modo desktop/Electron) con un puerto configurable.
+    import argparse
+    import uvicorn
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8001)
+    args = parser.parse_args()
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")

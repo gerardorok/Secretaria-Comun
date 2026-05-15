@@ -1,0 +1,52 @@
+{
+  "name": "secretaria-comun",
+  "version": "1.0.0",
+  "description": "Aplicación de escritorio para generar documentos institucionales de la CGR (Notificaciones por Aviso, Notificaciones Electrónicas y Citaciones a Notificación Personal).",
+  "main": "electron/main.js",
+  "author": "Secretaría Común · GRF · CGR Magdalena",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win"
+  },
+  "devDependencies": {
+    "electron": "^31.3.1",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "co.gov.contraloria.secretaria-comun",
+    "productName": "Secretaria Comun",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "!**/*.md"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist-backend/backend",
+        "to": "backend",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Secretaria Comun"
+    }
+  }
+}
